@@ -164,7 +164,6 @@ def yolo_forward_dynamic(output, conf_thresh, num_classes, anchors, num_anchors,
     bwh_list = []
     det_confs_list = []
     cls_confs_list = []
-
     for i in range(num_anchors):
         begin = i * (5 + num_classes)
         end = (i + 1) * (5 + num_classes)
@@ -197,6 +196,8 @@ def yolo_forward_dynamic(output, conf_thresh, num_classes, anchors, num_anchors,
     bwh = torch.exp(bwh)
     det_confs = torch.sigmoid(det_confs)
     cls_confs = torch.sigmoid(cls_confs)
+    # bxy = bxy * scale_x_y - 0.5 * (scale_x_y - 1)
+    # bxh = torch.pow(bwh*2,2)
 
     # Prepare C-x, C-y, P-w, P-h (None of them are torch related)
     grid_x = np.expand_dims(np.expand_dims(np.expand_dims(np.linspace(0, output.size(3) - 1, output.size(3)), axis=0).repeat(output.size(2), 0), axis=0), axis=0)

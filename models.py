@@ -13,6 +13,13 @@ class Mish(torch.nn.Module):
         x = x * (torch.tanh(torch.nn.functional.softplus(x)))
         return x
 
+class Swish(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        x = x * (torch.nn.functional.sigmoid(x))
+        return x
 
 class Upsample(nn.Module):
     def __init__(self):
@@ -50,10 +57,16 @@ class Conv_Bn_Activation(nn.Module):
             self.conv.append(nn.BatchNorm2d(out_channels))
         if activation == "mish":
             self.conv.append(Mish())
+        if activation == "swish":
+            self.conv.append(Swish())
         elif activation == "relu":
             self.conv.append(nn.ReLU(inplace=True))
         elif activation == "leaky":
             self.conv.append(nn.LeakyReLU(0.1, inplace=True))
+        elif activation == "selu":
+            self.conv.append(nn.SELU(inplace=True))
+        elif activation == "swish":
+            self.conv.append(nn.SiLU(inplace=True))
         elif activation == "linear":
             pass
         else:

@@ -275,6 +275,10 @@ class Darknet(nn.Module):
                     model.add_module('linear{0}'.format(conv_id), nn.Identity())
                 elif activation == 'logistic':
                     model.add_module('sigmoid{0}'.format(conv_id), nn.Sigmoid())
+                elif activation == 'selu':
+                    model.add_module('selu{0}'.format(conv_id), nn.SELU(inplace=True))
+                elif activation == 'swish':
+                    model.add_module('swish{0}'.format(conv_id), nn.SiLU(inplace=True))
                 else:
                     print("No convolutional activation named {}".format(activation))
 

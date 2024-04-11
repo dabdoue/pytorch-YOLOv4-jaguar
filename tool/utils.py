@@ -66,6 +66,7 @@ def nms_cpu(boxes, confs, nms_thresh=0.5, min_mode=False):
     y2 = boxes[:, 3]
 
     areas = (x2 - x1) * (y2 - y1)
+    
     order = confs.argsort()[::-1]
 
     keep = []
@@ -87,6 +88,10 @@ def nms_cpu(boxes, confs, nms_thresh=0.5, min_mode=False):
         if min_mode:
             over = inter / np.minimum(areas[order[0]], areas[order[1:]])
         else:
+            print("order[0] shape: " + str(order[0]))
+            print("areas[order[0]] shape: " + str(areas[order[0]]))
+            print("areas[order[1:]] shape: " + str(areas[order[1:]]))
+            print("inter shape: " + str(inter))
             over = inter / (areas[order[0]] + areas[order[1:]] - inter)
 
         inds = np.where(over <= nms_thresh)[0]
@@ -137,8 +142,8 @@ def plot_boxes_cv2(img, boxes, savename=None, class_names=None, color=None):
             t_size = cv2.getTextSize(msg, 0, 0.7, thickness=bbox_thick // 2)[0]
             c1, c2 = (x1,y1), (x2, y2)
             c3 = (c1[0] + t_size[0], c1[1] - t_size[1] - 3)
-            cv2.rectangle(img, (x1,y1), (np.float32(c3[0]), np.float32(c3[1])), rgb, -1)
-            img = cv2.putText(img, msg, (c1[0], np.float32(c1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX,0.7, (0,0,0), bbox_thick//2,lineType=cv2.LINE_AA)
+            cv2.rectangle(img, (int(x1),int(y1)), (int(c3[0]), int(c3[1])), rgb, -1)
+            img = cv2.putText(img, msg, (int(c1[0]), int(c1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX,0.7, (0,0,0), bbox_thick//2,lineType=cv2.LINE_AA)
         
         img = cv2.rectangle(img, (x1, y1), (x2, y2), rgb, bbox_thick)
     if savename:
@@ -176,35 +181,46 @@ def post_processing(img, conf_thresh, nms_thresh, output):
     # anchor_masks = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
     # strides = [8, 16, 32]
     # anchor_step = len(anchors) // num_anchors
-
+    # print("output shape: " + str(output.shape))
     # [batch, num, 1, 4]
     box_array = output[0]
+    # print("box_array shape: " + str(box_array.shape))
     # [batch, num, num_classes]
     confs = output[1]
+    # print("confs shape: " + str(confs.shape))
 
     t1 = time.time()
 
-    if type(box_array).__name__ != 'ndarray':
-        box_array = box_array.cpu().detach().numpy()
-        confs = confs.cpu().detach().numpy()
+    # if type(box_array).__name__ != 'ndarray':
+    #     box_array = box_array.cpu().detach().numpy()
+    #     confs = confs.cpu().detach().numpy()
 
     num_classes = confs.shape[2]
 
     # [batch, num, 4]
     box_array = box_array[:, :, 0]
+    # print("box_array shape: " + str(box_array.shape))
 
     # [batch, num, num_classes] --> [batch, num]
     max_conf = np.max(confs, axis=2)
+    # print("max_conf shape: " + str(max_conf.shape))
     max_id = np.argmax(confs, axis=2)
+    # print("max_id shape: " + str(max_id.shape))
+    # print("conf: " + str(len(max_conf[0])))
+    # print("id: " + str(len(max_id[0])))
 
     t2 = time.time()
 
     bboxes_batch = []
+    print("box array shape 0: " + str(box_array.shape[0]))
     for i in range(box_array.shape[0]):
        
         argwhere = max_conf[i] > conf_thresh
+        print(argwhere)
         l_box_array = box_array[i, argwhere, :]
+        print(l_box_array.shape)
         l_max_conf = max_conf[i, argwhere]
+        print(l_max_conf.shape)
         l_max_id = max_id[i, argwhere]
 
         bboxes = []

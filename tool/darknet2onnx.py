@@ -1,3 +1,4 @@
+import json
 import sys
 import torch
 from tool.darknet2pytorch import Darknet
@@ -38,7 +39,13 @@ def transform_to_onnx(cfgfile, weightfile, batch_size=1, onnx_file_name=None):
 
     else:
         x = torch.randn((batch_size, 3, model.height, model.width), requires_grad=True)
-        onnx_file_name = "yolov4_{}_3_{}_{}_static.onnx".format(batch_size, model.height, model.width)
+        if not onnx_file_name:
+            onnx_file_name = "yolov4_{}_3_{}_{}_static.onnx".format(batch_size, model.height, model.width)
+        # adding metadata
+        # meta = onnx_model.metadata_props.add()
+        # meta.key = "revision"
+        # meta.value = json.dumps("yyyyMMddHHmmss")
+        # onnx.save(onnx_model, 'detection.onnx')
         torch.onnx.export(model,
                           x,
                           onnx_file_name,
